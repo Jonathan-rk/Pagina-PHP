@@ -1,2 +1,2 @@
-# P-gina-PHP
+# Pagina-PHP
 Página de login simples com PHP e MySQL
