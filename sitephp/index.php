@@ -1,21 +1,30 @@
 <?php
+// Inclui o arquivo de conexão com o banco de dados
 include('conexao.php');
 
+// Inicializa a variável de mensagem
 $mensagem = "";
 
+// Verifica se o formulário foi enviado
 if(isset($_POST['usuario']) && isset($_POST['senha'])) {
     
+    // Valida se o campo de usuário foi preenchido
     if(strlen($_POST['usuario']) == 0) {
         $mensagem = "Preencha seu usuário";
-    } else if(strlen($_POST['senha']) == 0) {
+    } 
+    // Valida se o campo de senha foi preenchido
+    else if(strlen($_POST['senha']) == 0) {
         $mensagem = "Preencha sua senha";
-    } else {
+    } 
+    // Processa a tentativa de login
+    else {
         
+        // Sanitiza os dados de entrada para prevenir injeção SQL
         $usuario = $mysqli->real_escape_string($_POST['usuario']);
         $senha = $mysqli->real_escape_string($_POST['senha']);
         $tipo_usuario = isset($_POST['tipo_usuario']) ? $_POST['tipo_usuario'] : 'cliente';
         
-        // Verificar o tipo de usuário e consultar a tabela apropriada
+        // Determina a tabela e página de redirecionamento com base no tipo de usuário
         if($tipo_usuario == 'funcionario') {
             $sql_code = "SELECT * FROM funcionario WHERE usuario = '$usuario' AND senha = '$senha'";
             $redirect_page = "painel.php";
@@ -24,29 +33,37 @@ if(isset($_POST['usuario']) && isset($_POST['senha'])) {
             $redirect_page = "painel_cliente.php";
         }
         
+        // Executa a consulta SQL
         $sql_query = $mysqli->query($sql_code);
         
+        // Verifica se houve erro na consulta
         if(!$sql_query) {
             $mensagem = "Erro na consulta: " . $mysqli->error;
         } else {
             $quantidade = $sql_query->num_rows;
             
+            // Verifica se encontrou um usuário com as credenciais fornecidas
             if($quantidade == 1) {
                 
+                // Obtém os dados do usuário
                 $usuario_data = $sql_query->fetch_assoc();
                 
+                // Inicia a sessão se ainda não estiver iniciada
                 if(!isset($_SESSION)) {
                     session_start();
                 }
                 
+                // Armazena informações do usuário na sessão
                 $_SESSION['id'] = $usuario_data['id'];
                 $_SESSION['nome'] = $usuario_data['usuario'];
-                $_SESSION['tipo'] = $tipo_usuario; // Armazenar o tipo de usuário na sessão
+                $_SESSION['tipo'] = $tipo_usuario; // Armazena o tipo de usuário na sessão
                 
+                // Redireciona para a página apropriada
                 header("Location: $redirect_page");
                 exit;
                 
             } else {
+                // Mensagem de erro para credenciais inválidas
                 $mensagem = "Falha ao logar! Usuário ou senha incorretos";
             }
         }
