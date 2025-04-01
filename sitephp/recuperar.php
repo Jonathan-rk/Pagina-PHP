@@ -1,14 +1,4 @@
 <?php
-/**
- * Sistema de Recuperação de Senha
- * 
- * Este arquivo implementa a funcionalidade de recuperação de senha para o sistema de loja eletrônica.
- * Permite que tanto clientes quanto funcionários redefinam suas senhas caso as tenham esquecido.
- * 
- * @author Seu Nome
- * @version 1.0
- */
-
 // Inclui o arquivo de conexão com o banco de dados
 include('conexao.php');
 
