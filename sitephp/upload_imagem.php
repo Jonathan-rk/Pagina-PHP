@@ -12,6 +12,12 @@ $mensagem = "";
 $tipo_mensagem = "";
 $produto_selecionado = null;
 
+// Verificar se a extensão GD está habilitada
+if (!extension_loaded('gd')) {
+    $mensagem = "A extensão GD do PHP não está habilitada. Por favor, habilite-a no php.ini e reinicie o servidor.";
+    $tipo_mensagem = "erro";
+}
+
 // Verificar se foi passado um ID de produto na URL
 if(isset($_GET['id'])) {
     $produto_id = (int)$_GET['id'];
@@ -37,6 +43,11 @@ $result_produtos = $mysqli->query($sql_produtos);
 
 // Função para redimensionar imagem
 function redimensionarImagem($origem, $destino, $largura_desejada, $altura_desejada) {
+    // Verificar se a extensão GD está disponível
+    if (!function_exists('imagecreatetruecolor')) {
+        return false;
+    }
+    
     // Obter informações da imagem original
     list($largura_original, $altura_original, $tipo) = getimagesize($origem);
     
@@ -118,68 +129,74 @@ function redimensionarImagem($origem, $destino, $largura_desejada, $altura_desej
 
 // Processar o upload da imagem
 if(isset($_POST['upload']) && isset($_FILES['imagem'])) {
-    $produto_id = (int)$_POST['produto_id'];
-    
-    // Verificar se o upload foi bem-sucedido
-    if($_FILES['imagem']['error'] == 0) {
-        // Primeiro, verificar se o produto já tem uma imagem para excluí-la
-        $sql_check_imagem = "SELECT imagem FROM produtos WHERE id = $produto_id";
-        $result_check = $mysqli->query($sql_check_imagem);
+    // Verificar se a extensão GD está disponível
+    if (!extension_loaded('gd')) {
+        $mensagem = "A extensão GD do PHP não está habilitada. Por favor, habilite-a no php.ini e reinicie o servidor.";
+        $tipo_mensagem = "erro";
+    } else {
+        $produto_id = (int)$_POST['produto_id'];
         
-        if($result_check && $result_check->num_rows > 0) {
-            $produto_atual = $result_check->fetch_assoc();
-            $imagem_antiga = $produto_atual['imagem'];
+        // Verificar se o upload foi bem-sucedido
+        if($_FILES['imagem']['error'] == 0) {
+            // Primeiro, verificar se o produto já tem uma imagem para excluí-la
+            $sql_check_imagem = "SELECT imagem FROM produtos WHERE id = $produto_id";
+            $result_check = $mysqli->query($sql_check_imagem);
             
-            // Se existe uma imagem antiga, excluí-la do sistema de arquivos
-            if(!empty($imagem_antiga) && file_exists($imagem_antiga)) {
-                unlink($imagem_antiga); // Remove o arquivo físico
+            if($result_check && $result_check->num_rows > 0) {
+                $produto_atual = $result_check->fetch_assoc();
+                $imagem_antiga = $produto_atual['imagem'];
+                
+                // Se existe uma imagem antiga, excluí-la do sistema de arquivos
+                if(!empty($imagem_antiga) && file_exists($imagem_antiga)) {
+                    unlink($imagem_antiga); // Remove o arquivo físico
+                }
             }
-        }
-        
-        // Diretório para salvar as imagens
-        $diretorio = "uploads/";
-        
-        // Criar o diretório se não existir
-        if(!is_dir($diretorio)) {
-            mkdir($diretorio, 0755, true);
-        }
-        
-        // Obter a extensão do arquivo
-        $extensao = pathinfo($_FILES['imagem']['name'], PATHINFO_EXTENSION);
-        
-        // Gerar um nome único para o arquivo
-        $nome_arquivo = 'produto_' . $produto_id . '_' . time() . '.' . $extensao;
-        
-        // Caminho completo do arquivo
-        $caminho_arquivo = $diretorio . $nome_arquivo;
-        
-        // Caminho temporário do arquivo enviado
-        $arquivo_temp = $_FILES['imagem']['tmp_name'];
-        
-        // Definir dimensões padrão
-        $largura_padrao = 300;
-        $altura_padrao = 300;
-        
-        // Redimensionar e salvar a imagem
-        if(redimensionarImagem($arquivo_temp, $caminho_arquivo, $largura_padrao, $altura_padrao)) {
-            // Atualizar o caminho da imagem no banco de dados
-            $sql = "UPDATE produtos SET imagem = '$caminho_arquivo' WHERE id = $produto_id";
             
-            if($mysqli->query($sql)) {
-                // Redirecionar para a mesma página com mensagem de sucesso
-                header("Location: upload_imagem.php?id=$produto_id&mensagem=Imagem atualizada com sucesso&tipo=sucesso");
-                exit;
+            // Diretório para salvar as imagens
+            $diretorio = "uploads/";
+            
+            // Criar o diretório se não existir
+            if(!is_dir($diretorio)) {
+                mkdir($diretorio, 0755, true);
+            }
+            
+            // Obter a extensão do arquivo
+            $extensao = pathinfo($_FILES['imagem']['name'], PATHINFO_EXTENSION);
+            
+            // Gerar um nome único para o arquivo
+            $nome_arquivo = 'produto_' . $produto_id . '_' . time() . '.' . $extensao;
+            
+            // Caminho completo do arquivo
+            $caminho_arquivo = $diretorio . $nome_arquivo;
+            
+            // Caminho temporário do arquivo enviado
+            $arquivo_temp = $_FILES['imagem']['tmp_name'];
+            
+            // Definir dimensões padrão
+            $largura_padrao = 300;
+            $altura_padrao = 300;
+            
+            // Redimensionar e salvar a imagem
+            if(redimensionarImagem($arquivo_temp, $caminho_arquivo, $largura_padrao, $altura_padrao)) {
+                // Atualizar o caminho da imagem no banco de dados
+                $sql = "UPDATE produtos SET imagem = '$caminho_arquivo' WHERE id = $produto_id";
+                
+                if($mysqli->query($sql)) {
+                    // Redirecionar para a mesma página com mensagem de sucesso
+                    header("Location: upload_imagem.php?id=$produto_id&mensagem=Imagem atualizada com sucesso&tipo=sucesso");
+                    exit;
+                } else {
+                    $mensagem = "Erro ao atualizar o banco de dados: " . $mysqli->error;
+                    $tipo_mensagem = "erro";
+                }
             } else {
-                $mensagem = "Erro ao atualizar o banco de dados: " . $mysqli->error;
+                $mensagem = "Erro ao redimensionar a imagem. Verifique se a extensão GD do PHP está habilitada.";
                 $tipo_mensagem = "erro";
             }
         } else {
-            $mensagem = "Erro ao redimensionar a imagem.";
+            $mensagem = "Erro no upload do arquivo: " . $_FILES['imagem']['error'];
             $tipo_mensagem = "erro";
         }
-    } else {
-        $mensagem = "Erro no upload do arquivo: " . $_FILES['imagem']['error'];
-        $tipo_mensagem = "erro";
     }
 }
 ?>
@@ -337,6 +354,23 @@ if(isset($_POST['upload']) && isset($_FILES['imagem'])) {
             border-radius: 5px;
             margin-bottom: 15px;
         }
+        
+        .error-container {
+            background-color: rgba(220, 53, 69, 0.3);
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .error-container h2 {
+            color: #ffcccb;
+            margin-top: 0;
+        }
+        
+        .error-container p {
+            margin-bottom: 0;
+        }
     </style>
     <script>
         // Função para mostrar preview da imagem
@@ -366,7 +400,7 @@ if(isset($_POST['upload']) && isset($_FILES['imagem'])) {
         <header>
             <h1>Upload de Imagem</h1>
             <div class="nav-links">
-                <a href="painel.php">Voltar ao Painel</a>
+            <a href="painel.php">Voltar ao Painel</a>
             </div>
         </header>
         
@@ -376,57 +410,70 @@ if(isset($_POST['upload']) && isset($_FILES['imagem'])) {
             </div>
         <?php endif; ?>
         
-        <div class="info-padrao">
-            <p><strong>Informação:</strong> Todas as imagens serão redimensionadas automaticamente para o tamanho padrão de 300px x 300px.</p>
-        </div>
-        
-        <?php if($produto_selecionado): ?>
-            <div class="produto-atual">
-                <h3>Produto Selecionado: <?php echo htmlspecialchars($produto_selecionado['nome_produto']); ?></h3>
+        <?php if(!extension_loaded('gd')): ?>
+            <div class="error-container">
+                <h2>Extensão GD não habilitada</h2>
+                <p>A extensão GD do PHP é necessária para o processamento de imagens.</p>
+                <p>Para habilitar a extensão GD:</p>
+                <ol style="text-align: left; margin-top: 15px;">
+                    <li>Abra o arquivo php.ini (geralmente em C:\xampp\php\php.ini)</li>
+                    <li>Procure por ";extension=gd" e remova o ponto e vírgula do início</li>
+                    <li>Salve o arquivo e reinicie o servidor Apache</li>
+                </ol>
+            </div>
+        <?php else: ?>
+            <div class="info-padrao">
+                <p><strong>Informação:</strong> Todas as imagens serão redimensionadas automaticamente para o tamanho padrão de 300px x 300px.</p>
+            </div>
+            
+            <?php if($produto_selecionado): ?>
+                <div class="produto-atual">
+                    <h3>Produto Selecionado: <?php echo htmlspecialchars($produto_selecionado['nome_produto']); ?></h3>
+                    
+                    <?php if(!empty($produto_selecionado['imagem'])): ?>
+                        <p>Imagem atual:</p>
+                        <img src="<?php echo htmlspecialchars($produto_selecionado['imagem']); ?>" alt="Imagem atual" class="imagem-atual">
+                    <?php else: ?>
+                        <p>Este produto não possui imagem.</p>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
+            
+            <div class="form-container">
+                <h2><?php echo $produto_selecionado ? 'Alterar' : 'Adicionar'; ?> Imagem ao Produto</h2>
                 
-                <?php if(!empty($produto_selecionado['imagem'])): ?>
-                    <p>Imagem atual:</p>
-                    <img src="<?php echo htmlspecialchars($produto_selecionado['imagem']); ?>" alt="Imagem atual" class="imagem-atual">
-                <?php else: ?>
-                    <p>Este produto não possui imagem.</p>
-                <?php endif; ?>
+                <form action="" method="post" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="produto_id">Selecione o Produto</label>
+                        <select name="produto_id" id="produto_id" required>
+                            <option value="">Selecione um produto</option>
+                            <?php if($result_produtos && $result_produtos->num_rows > 0): ?>
+                                <?php while($produto = $result_produtos->fetch_assoc()): ?>
+                                    <option value="<?php echo $produto['id']; ?>" <?php echo ($produto_selecionado && $produto_selecionado['id'] == $produto['id']) ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($produto['nome_produto']); ?>
+                                    </option>
+                                <?php endwhile; ?>
+                            <?php endif; ?>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="imagem">Selecione a Imagem</label>
+                        <input type="file" name="imagem" id="imagem" accept="image/*" required onchange="previewImage(this)">
+                        <small style="display: block; margin-top: 5px; color: #ccc;">
+                            Formatos aceitos: JPG, JPEG, PNG, GIF. A imagem será redimensionada para 300px x 300px.
+                        </small>
+                        <div class="preview-container" style="display: none;">
+                            <p>Preview da nova imagem:</p>
+                            <img id="image-preview" src="#" alt="Preview da imagem">
+                            <p style="color: #ccc; font-size: 12px;">Nota: Esta é apenas uma prévia. A imagem final será redimensionada para 300px x 300px.</p>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" name="upload" class="btn">Enviar Imagem</button>
+                </form>
             </div>
         <?php endif; ?>
-        
-        <div class="form-container">
-            <h2><?php echo $produto_selecionado ? 'Alterar' : 'Adicionar'; ?> Imagem ao Produto</h2>
-            
-            <form action="" method="post" enctype="multipart/form-data">
-                <div class="form-group">
-                    <label for="produto_id">Selecione o Produto</label>
-                    <select name="produto_id" id="produto_id" required>
-                        <option value="">Selecione um produto</option>
-                        <?php if($result_produtos && $result_produtos->num_rows > 0): ?>
-                            <?php while($produto = $result_produtos->fetch_assoc()): ?>
-                                <option value="<?php echo $produto['id']; ?>" <?php echo ($produto_selecionado && $produto_selecionado['id'] == $produto['id']) ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($produto['nome_produto']); ?>
-                                </option>
-                            <?php endwhile; ?>
-                        <?php endif; ?>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="imagem">Selecione a Imagem</label>
-                    <input type="file" name="imagem" id="imagem" accept="image/*" required onchange="previewImage(this)">
-                    <small style="display: block; margin-top: 5px; color: #ccc;">
-                        Formatos aceitos: JPG, JPEG, PNG, GIF. A imagem será redimensionada para 300px x 300px.
-                    </small>
-                    <div class="preview-container" style="display: none;">
-                        <p>Preview da nova imagem:</p>
-                        <img id="image-preview" src="#" alt="Preview da imagem">
-                        <p style="color: #ccc; font-size: 12px;">Nota: Esta é apenas uma prévia. A imagem final será redimensionada para 300px x 300px.</p>
-                    </div>
-                </div>
-                
-                <button type="submit" name="upload" class="btn">Enviar Imagem</button>
-            </form>
-        </div>
     </div>
 </body>
 </html>
