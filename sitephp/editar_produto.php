@@ -60,7 +60,7 @@ if(isset($_POST['nome_produto']) && isset($_POST['valor_venda']) && isset($_POST
             $produto['descricao'] = $descricao;
             
             // Redirecionar após 1.5 segundos
-            echo "<script>setTimeout(function(){ window.location.href = 'produtos.php?atualizado=1'; }, 1500);</script>";
+            echo "<script>setTimeout(function(){ window.location.href = 'painel.php?produto_atualizado=1'; }, 1500);</script>";
         } else {
             $mensagem = "Erro ao atualizar produto: " . $mysqli->error;
         }
