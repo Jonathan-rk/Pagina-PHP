@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 10/04/2025 às 21:54
+-- Tempo de geração: 10/04/2025 às 22:01
 -- Versão do servidor: 10.4.32-MariaDB
 -- Versão do PHP: 8.2.12
 
@@ -61,13 +61,6 @@ CREATE TABLE `clientes` (
   `data_cadastro` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Despejando dados para a tabela `clientes`
---
-
-INSERT INTO `clientes` (`id`, `usuario`, `senha`, `email`, `telefone`, `endereco`, `numero`, `complemento`, `bairro`, `cidade`, `estado`, `cep`, `data_cadastro`) VALUES
-(3, '1', '2', 'khkuyg@gmail.com', 2147483647, 'Rua das Flores', '123', '', 'Jardim Primavera', 'Belo Horizonte', 'MG', '30123-456', '2025-04-10 17:44:44');
-
 -- --------------------------------------------------------
 
 --
@@ -80,13 +73,6 @@ CREATE TABLE `funcionario` (
   `usuario` varchar(40) NOT NULL,
   `senha` varchar(20) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Despejando dados para a tabela `funcionario`
---
-
-INSERT INTO `funcionario` (`id`, `usuario`, `senha`) VALUES
-(6, 'joão', '12345');
 
 -- --------------------------------------------------------
 
@@ -111,16 +97,6 @@ CREATE TABLE `pedidos` (
   `cep` varchar(20) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Despejando dados para a tabela `pedidos`
---
-
-INSERT INTO `pedidos` (`id`, `cliente_id`, `data_pedido`, `valor_total`, `status`, `metodo_pagamento`, `endereco`, `numero`, `complemento`, `bairro`, `cidade`, `estado`, `cep`) VALUES
-(10, 3, '2025-04-10 21:28:00', 2300.90, 'Confirmado', NULL, 'Rua das Flores', '123', '', 'Jardim Primavera', 'Belo Horizonte', 'MG', '30123-456'),
-(11, 3, '2025-04-10 21:38:32', 60.00, 'Confirmado', 'pix', 'Rua das Flores', '123', '', 'Jardim Primavera', 'Belo Horizonte', 'MG', '30123-456'),
-(12, 3, '2025-04-10 21:53:20', 60.00, 'Confirmado', 'pix', 'Rua das Flores', '123', '', 'Jardim Primavera', 'Belo Horizonte', 'MG', '30123-456'),
-(13, 3, '2025-04-10 21:53:33', 60.00, 'Confirmado', 'boleto', 'Rua das Flores', '123', '', 'Jardim Primavera', 'Belo Horizonte', 'MG', '30123-456');
-
 -- --------------------------------------------------------
 
 --
@@ -136,16 +112,6 @@ CREATE TABLE `pedido_itens` (
   `valor_unitario` decimal(10,2) NOT NULL,
   `subtotal` decimal(10,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Despejando dados para a tabela `pedido_itens`
---
-
-INSERT INTO `pedido_itens` (`id`, `pedido_id`, `produto_id`, `quantidade`, `valor_unitario`, `subtotal`) VALUES
-(10, 10, 13, 1, 2300.90, 2300.90),
-(11, 11, 14, 1, 60.00, 60.00),
-(12, 12, 14, 1, 60.00, 60.00),
-(13, 13, 14, 1, 60.00, 60.00);
 
 -- --------------------------------------------------------
 
