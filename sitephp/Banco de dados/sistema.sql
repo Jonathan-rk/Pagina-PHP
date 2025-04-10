@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 10/04/2025 às 21:41
+-- Tempo de geração: 10/04/2025 às 21:54
 -- Versão do servidor: 10.4.32-MariaDB
 -- Versão do PHP: 8.2.12
 
@@ -117,7 +117,9 @@ CREATE TABLE `pedidos` (
 
 INSERT INTO `pedidos` (`id`, `cliente_id`, `data_pedido`, `valor_total`, `status`, `metodo_pagamento`, `endereco`, `numero`, `complemento`, `bairro`, `cidade`, `estado`, `cep`) VALUES
 (10, 3, '2025-04-10 21:28:00', 2300.90, 'Confirmado', NULL, 'Rua das Flores', '123', '', 'Jardim Primavera', 'Belo Horizonte', 'MG', '30123-456'),
-(11, 3, '2025-04-10 21:38:32', 60.00, 'Confirmado', 'pix', 'Rua das Flores', '123', '', 'Jardim Primavera', 'Belo Horizonte', 'MG', '30123-456');
+(11, 3, '2025-04-10 21:38:32', 60.00, 'Confirmado', 'pix', 'Rua das Flores', '123', '', 'Jardim Primavera', 'Belo Horizonte', 'MG', '30123-456'),
+(12, 3, '2025-04-10 21:53:20', 60.00, 'Confirmado', 'pix', 'Rua das Flores', '123', '', 'Jardim Primavera', 'Belo Horizonte', 'MG', '30123-456'),
+(13, 3, '2025-04-10 21:53:33', 60.00, 'Confirmado', 'boleto', 'Rua das Flores', '123', '', 'Jardim Primavera', 'Belo Horizonte', 'MG', '30123-456');
 
 -- --------------------------------------------------------
 
@@ -141,7 +143,9 @@ CREATE TABLE `pedido_itens` (
 
 INSERT INTO `pedido_itens` (`id`, `pedido_id`, `produto_id`, `quantidade`, `valor_unitario`, `subtotal`) VALUES
 (10, 10, 13, 1, 2300.90, 2300.90),
-(11, 11, 14, 1, 60.00, 60.00);
+(11, 11, 14, 1, 60.00, 60.00),
+(12, 12, 14, 1, 60.00, 60.00),
+(13, 13, 14, 1, 60.00, 60.00);
 
 -- --------------------------------------------------------
 
@@ -173,7 +177,7 @@ INSERT INTO `produtos` (`id`, `nome_produto`, `valor_venda`, `valor_compra`, `de
 (11, 'Notebook Gamer Acer Nitro V', 6599.00, 3050.90, 'I7 13aGen Linux Gutta 16GB 512GB Ssd RTX4050 15.6\' Fhd', 50, 'uploads/produto_1743372286_5315.jpeg'),
 (12, 'Celular Samsung Galaxy A15', 999.00, 200.00, '128GB, 4GB RAM, Tela Infinita Super AMOLED de 6.5\" ', 100, 'uploads/produto_1743372398_9241.jpeg'),
 (13, 'Celular Samsung Galaxy A55', 2300.90, 1200.00, '5G, Câmera Tripla até 50MP, Tela 6.6\", 128GB', 29, 'uploads/produto_1743372532_4728.jpeg'),
-(14, 'Carregador ', 60.00, 20.00, 'USB 1A + Cabo USB-C 1,2m 2,4A i2GO Preto', 58, 'uploads/produto_1743372641_4954.jpeg');
+(14, 'Carregador ', 60.00, 20.00, 'USB 1A + Cabo USB-C 1,2m 2,4A i2GO Preto', 56, 'uploads/produto_1743372641_4954.jpeg');
 
 --
 -- Índices para tabelas despejadas
@@ -228,7 +232,7 @@ ALTER TABLE `produtos`
 -- AUTO_INCREMENT de tabela `carrinho`
 --
 ALTER TABLE `carrinho`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
 -- AUTO_INCREMENT de tabela `clientes`
@@ -246,13 +250,13 @@ ALTER TABLE `funcionario`
 -- AUTO_INCREMENT de tabela `pedidos`
 --
 ALTER TABLE `pedidos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT de tabela `pedido_itens`
 --
 ALTER TABLE `pedido_itens`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT de tabela `produtos`
