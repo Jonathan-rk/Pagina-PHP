@@ -96,57 +96,66 @@ if (isset($_POST['atualizar_quantidade'])) {
         $item_id = (int)$item_id;
         $nova_quantidade = (int)$nova_quantidade;
         
-        // Obter a quantidade atual para calcular a diferença
-        $get_atual = "SELECT produto_id, quantidade FROM carrinho WHERE id = $item_id AND cliente_id = $cliente_id";
-        $result_atual = $mysqli->query($get_atual);
+        if($nova_quantidade < 1) {
+            continue;
+        }
         
-        if ($result_atual && $result_atual->num_rows > 0) {
-            $item_atual = $result_atual->fetch_assoc();
-            $produto_id = $item_atual['produto_id'];
-            $quantidade_atual = $item_atual['quantidade'];
-            $diferenca = $nova_quantidade - $quantidade_atual;
+        // Verificar estoque disponível
+        $check_sql = "SELECT c.produto_id, c.quantidade as qtd_carrinho, p.quantidade as estoque 
+                     FROM carrinho c 
+                     JOIN produtos p ON c.produto_id = p.id 
+                     WHERE c.id = $item_id AND c.cliente_id = $cliente_id";
+        
+        $result = $mysqli->query($check_sql);
+        
+        if($result && $result->num_rows > 0) {
+            $item = $result->fetch_assoc();
+            $produto_id = $item['produto_id'];
+            $qtd_atual = $item['qtd_carrinho'];
+            $estoque = $item['estoque'];
             
-            if ($nova_quantidade < 1) {
-                // Remover item se quantidade for menor que 1
-                $mysqli->query("DELETE FROM carrinho WHERE id = $item_id AND cliente_id = $cliente_id");
-                
-                // Restaurar quantidade ao estoque
-                $update_estoque = "UPDATE produtos SET quantidade = quantidade + $quantidade_atual WHERE id = $produto_id";
-                $mysqli->query($update_estoque);
-            } else {
-                // Verificar se há estoque suficiente para aumentar a quantidade
-                if ($diferenca > 0) {
-                    $check_estoque = "SELECT quantidade FROM produtos WHERE id = $produto_id AND quantidade >= $diferenca";
-                    $result_estoque = $mysqli->query($check_estoque);
+            // Calcular diferença
+            $diferenca = $nova_quantidade - $qtd_atual;
+            
+            if($diferenca > 0) {
+                // Aumentando quantidade
+                if($diferenca <= $estoque) {
+                    $mysqli->begin_transaction();
                     
-                    if ($result_estoque && $result_estoque->num_rows > 0) {
-                        // Atualizar quantidade no carrinho
-                        $mysqli->query("UPDATE carrinho SET quantidade = $nova_quantidade WHERE id = $item_id AND cliente_id = $cliente_id");
+                    try {
+                        // Atualizar carrinho
+                        $mysqli->query("UPDATE carrinho SET quantidade = $nova_quantidade 
+                                      WHERE id = $item_id AND cliente_id = $cliente_id");
                         
                         // Atualizar estoque
-                        $mysqli->query("UPDATE produtos SET quantidade = quantidade - $diferenca WHERE id = $produto_id");
-                    } else {
-                        $mensagem = "Estoque insuficiente para alguns produtos.";
+                        $mysqli->query("UPDATE produtos SET quantidade = quantidade - $diferenca 
+                                      WHERE id = $produto_id");
+                        
+                        $mysqli->commit();
+                        $mensagem = "Quantidade atualizada com sucesso!";
+                        $tipo_mensagem = "sucesso";
+                    } catch(Exception $e) {
+                        $mysqli->rollback();
+                        $mensagem = "Erro ao atualizar quantidade";
                         $tipo_mensagem = "erro";
-                        continue;
                     }
-                } else if ($diferenca < 0) {
-                    // Diminuindo a quantidade, restaurar ao estoque
-                    $diferenca_abs = abs($diferenca);
-                    
-                    // Atualizar quantidade no carrinho
-                    $mysqli->query("UPDATE carrinho SET quantidade = $nova_quantidade WHERE id = $item_id AND cliente_id = $cliente_id");
-                    
-                    // Restaurar ao estoque
-                    $mysqli->query("UPDATE produtos SET quantidade = quantidade + $diferenca_abs WHERE id = $produto_id");
+                } else {
+                    $mensagem = "Estoque insuficiente";
+                    $tipo_mensagem = "erro";
                 }
-                // Se diferença for 0, não precisa fazer nada
+            } else {
+                // Diminuindo quantidade
+                $mysqli->query("UPDATE carrinho SET quantidade = $nova_quantidade 
+                              WHERE id = $item_id AND cliente_id = $cliente_id");
+                              
+                $mysqli->query("UPDATE produtos SET quantidade = quantidade + " . abs($diferenca) . " 
+                              WHERE id = $produto_id");
+                              
+                $mensagem = "Quantidade atualizada com sucesso!";
+                $tipo_mensagem = "sucesso";
             }
         }
     }
-    
-    $mensagem = "Carrinho atualizado!";
-    $tipo_mensagem = "sucesso";
 }
 
 // Limpar carrinho
